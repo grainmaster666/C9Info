@@ -287,19 +287,19 @@
                 <div class="col-12">
                     <div class="contact-form-wrapper">
 
-                        @using (Html.BeginForm("Index", "Home", FormMethod.Post, new { @class="contact-form" }))
+                        @using (Html.BeginForm("", "", FormMethod.Post, new { @class = "contact-form" }))
                         {
                             <div class="row">
                                 <div class="col-md-6">
                                     @Html.TextBoxFor(m => m.Name, new { @id = "name", placeholder = "Name", required = "" })
                                 </div>
                                 <div class="col-md-6">
-                                    @Html.TextBoxFor(m => m.Email, new { @id = "email", placeholder = "Email", required = ""})
+                                    @Html.TextBoxFor(m => m.Email, new { @id = "email", placeholder = "Email", type = "email", required = "" })
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
-                                    @Html.TextBoxFor(m => m.Phone, new { @id = "phone", placeholder = "Phone", required = "" })
+                                    @Html.TextBoxFor(m => m.Phone, new { @id = "phone", placeholder = "Phone", maxlength = "10", pattern = "\\d{10}", required = "" })
                                 </div>
                                 <div class="col-md-6">
                                     @Html.TextBoxFor(m => m.Subject, new { @id = "subject", placeholder = "Subject", required = "" })
@@ -307,28 +307,23 @@
                             </div>
                             <div class="row">
                                 <div class="col-12">
-                                    @Html.TextAreaFor(m => m.Message, new { @id = "message", placeholder = "Type Message", rows = "5" })
+                                    @Html.TextAreaFor(m => m.Message, new { @id = "message", placeholder = "Type Message", rows = "5", required = "" })
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-12">
                                     <div class="button text-center rounded-buttons">
-                                        <button type="button" class="btn primary-btn rounded-full" onclick=" return SendPreview();">
+                                        <button type="submit" class="btn primary-btn rounded-full" onclick="return SendPreview(event);">
                                             Send Message
                                         </button>
                                     </div>
                                     <br>
-                                    @*<div class="alert alert-success alert-dismissible" style="display:@(TempData["Success"] != null ? "block" :"None")">
-            <strong>Success!</strong> Your message has been sent successfully.
-        </div>*@
                                     <div class="alert alert-success alert-dismissible" id="msgdiv" style="display:none">
                                         <strong>Success!</strong> Your message has been sent successfully.
                                     </div>
                                 </div>
                             </div>
-                         }
-                        <form action="#" class="contact-form">
-                        </form>
+                        }
                     </div>
                 </div>
             </div> <!-- row -->
@@ -449,19 +444,20 @@
     <!--====== Main js ======-->
     <script src="~/js/main.js"></script>
     <script>
-        function SendPreview() {
 
-            var name = $("#name").val();
-            var email = $("#email").val();
-            var phone = $("#phone").val();
-            var msg = $("#message").val();
-            var subject = $("#subject").val();
+        function SendPreview(e) {
+            var model = ValidAndGetData();
+            if (model == undefined)
+                return;
+
+            e.preventDefault();
+
             try {
                 $.ajax({
                     url: "/Home/Index",
                     type: "POST",
                     dataType: "json",
-                    data: { Name: name, Email: email, Subject: subject, Phone: phone, Message: msg },
+                    data: model,
                     success: function (data) {
                         if (data != undefined && data) {
                             $("#msgdiv").css("display", "block");
@@ -478,8 +474,24 @@
             }
         }
 
-        function clear()
-        {
+        function ValidAndGetData() {
+            var name = $("#name").val();
+            var email = $("#email").val();
+            var phone = $("#phone").val();
+            var msg = $("#message").val();
+            var subject = $("#subject").val();
+
+            var phoneRegex = /^\d{10}$/;
+            if (!phoneRegex.test(phone))
+                return;
+
+            if (name == "" || email == "" || phone == "" || msg == "" || subject == "")
+                return;
+
+            return { Name: name, Email: email, Subject: subject, Phone: phone, Message: msg }
+        }
+
+        function clear() {
             $("#name").val('');
             $("#email").val('');
             $("#phone").val('');
